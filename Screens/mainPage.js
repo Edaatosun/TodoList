@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, Modal, BackHandler, Alert } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, Image, ScrollView, Modal, BackHandler, Alert, Platform } from 'react-native';
 import { TodoModel, getTodoList } from '../models/todoModel'; // Import TodoModel and getTodoList
 import AddTodo from './addTodo';
 import CountdownTimer from './countTimeTimer';
 import { users } from '../models/users';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Feather';
+import Icon2 from 'react-native-vector-icons/FontAwesome'
 
 export default function MainPage({ navigation }) {
   const [tasks, setTasks] = useState([]); // todolist
@@ -64,6 +65,7 @@ useEffect(() => {
     // Seçilen kategori ile eşleşen görevleri getir
     const filtered = tasks.filter(task => task.category === selectedCategory); 
     setFilteredTasks(filtered);
+    console.log(tasks);
 
     if (filtered.length === 0) {
       setNoTasksMessage("Bu kategoride hiçbir todo bulunmamaktadır.");
@@ -119,6 +121,8 @@ useEffect(() => {
   }, [selectedTodo]);
 
 
+
+  
   return (
     <View style={styles.container}>
       <View style={styles.headContainer}>
@@ -169,28 +173,76 @@ useEffect(() => {
           </Text>
           </View>
         ) : (
-          <ScrollView style={styles.scrollContainer}>
-            {filteredTasks.map((todo, index) => ( 
-              <TouchableOpacity
-                key={index}
-                style={[styles.cards, { backgroundColor: "#F76C6A" }]}
-                onPress={() => cardNavigation(todo)}
-              >
-                <View style={styles.titleContainer}>
-                  <Text numberOfLines={1} ellipsizeMode="tail" style={styles.title}>{todo.title}</Text>
-                  <TouchableOpacity onPress={() => showTimerModal(todo)}>
-                    <Image
-                      source={require("../assets/icons/clock.png")}
-                      style={{ width: 25, height: 25 }}
-                    />
-                  </TouchableOpacity>
-                </View>
-                <Text numberOfLines={7} ellipsizeMode="tail" style={styles.description}>{todo.description}</Text>
-                <Text style={styles.createdAtText}>Created at: {todo.createdAt}</Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        )}
+              <ScrollView style={styles.scrollContainer}>
+                {filteredTasks.map((todo, index) => {
+                  // Tarih formatlarını kontrol etme ve dönüştürme
+                  let deadlineDate, createdAtDate;
+
+                  try {
+
+                    if(Platform.OS==="android"){
+                      deadlineDate = todo.deadLine.split(".").reverse().join("-");
+                      createdAtDate = todo.createdAt.split(".").reverse().join("-"); 
+                      }
+                      else{
+                        const [month2,day2 , year2] = todo.deadLine.split("/"); 
+                        if(month2<10){
+                          deadlineDate = `${year2}-${0}${month2}-${day2}`;
+                        }
+                        else{
+                          deadlineDate = `${year2}-${month2}-${day2}`;
+                        }
+                       
+                        createdAtDate = todo.createdAt.split(".").reverse().join("-");
+                      }
+                    // Geçerli tarih formatlarına dönüştürme
+                    
+                  } catch (error) {
+                    console.error("Tarih formatı hatası:", error);
+                    deadlineDate = new Date();  // Varsayılan tarih
+                    createdAtDate = new Date();  // Varsayılan tarih
+                  }
+
+                  return (
+                    <TouchableOpacity
+                      key={index}
+                      style={[
+                        styles.cards,
+                        deadlineDate <= createdAtDate
+                          ? { backgroundColor: "#F79E89" }
+                          : { backgroundColor: "#F76C6A" },
+                      ]}
+                      onPress={() => cardNavigation(todo)}
+                    >
+                      <View style={styles.titleContainer}>
+                        <Text numberOfLines={1} ellipsizeMode="tail" style={styles.title}>
+                          {todo.title}
+                        </Text>
+                        <TouchableOpacity onPress={() => showTimerModal(todo)}>
+                          <Image
+                            source={require("../assets/icons/clock.png")}
+                            style={{ width: 25, height: 25 }}
+                          />
+                        </TouchableOpacity>
+                      </View>
+                      <Text numberOfLines={7} ellipsizeMode="tail" style={styles.description}>
+                        {todo.description}
+                      </Text>
+                      <View style={styles.categoryContainer}>
+                        <Text style={{ fontSize: 12, color: "white" }}>
+                          Created at: {todo.createdAt}
+                        </Text>
+                        {todo.category === "Kariyer" ? (
+                          <Icon2 name="briefcase" size={24} color="black" />
+                        ) : (
+                          <Icon2 name="star" size={24} color="yellow" />
+                        )}
+                      </View>
+                    </TouchableOpacity>
+                  );
+                })}
+              </ScrollView>
+                      )}
 
       <TouchableOpacity onPress={() => setAddTodoModalVisible(true)}>
         <Image source={require("../assets/icons/plus-circle.png")} style={{ width: 75, height: 75, position: "absolute", bottom: 10, right: 10 }} />
@@ -206,7 +258,7 @@ useEffect(() => {
             {selectedTodo && (
               <CountdownTimer 
               createdAt={selectedTodo.createdAt} 
-              deadline={selectedTodo.deadLine} 
+              deadline={selectedTodo.deadLine}
               />
             )}
             <TouchableOpacity onPress={closeTimerModal}>
@@ -262,12 +314,16 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "white",
   },
-  createdAtText: {
-    fontSize: 12,
-    color: "white",
-    position: "absolute",
-    bottom: 10,
-    left: 10,
+  categoryContainer: {
+    position: "absolute",  // Mutlaka kartın içinde konumlanmasını sağlar.
+    bottom: 0,             // Her zaman kartın en altına yapıştırır.
+    left: 0,               // Opsiyonel: Kartın sol kenarına yaslar.
+    right: 0,              // Opsiyonel: Kartın sağ kenarına yaslar.
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",  // Daha düzgün hizalama için "center" kullanabilirsiniz.
+    padding: 10,   
+ 
   },
   titleContainer: {
     flexDirection: "row",

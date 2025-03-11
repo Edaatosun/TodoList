@@ -1,16 +1,36 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Platform } from 'react-native';
 
 
 const CountdownTimer = ({ createdAt, deadline }) => {
 
-  const correctDateForCreated = createdAt.split(".").reverse().join("-"); 
-  const correctDateFordeadline = deadline.split(".").reverse().join("-"); 
+  let correctDateForCreated, correctDateFordeadline;
+
+  if(Platform.OS==="android"){
+    correctDateForCreated = createdAt.split(".").reverse().join("-"); 
+    const [day2, month2, year2] = deadline.split("."); 
+    correctDateFordeadline = `${year2}-${month2}-${day2}`;
+  }
+  else{
+    correctDateForCreated = createdAt.split(".").reverse().join("-"); 
+    const [month2,day2 , year2] = deadline.split("/"); 
+    if(month2<10){
+      correctDateFordeadline = `${year2}-${0}${month2}-${day2}`;
+
+    }
+    else{
+      correctDateFordeadline = `${year2}-${month2}-${day2}`;
+    }
+    
+  }
+
+  
 
   
 
   if (!createdAt || !deadline) {
     return <Text>Geçersiz tarih bilgisi!</Text>;
+    
   }
 
   const startDate = new Date(correctDateForCreated);
@@ -27,24 +47,14 @@ const CountdownTimer = ({ createdAt, deadline }) => {
     if (timeLeft <= 0) {
       setIsCompleted(true);
     }
-    const interval = setInterval(() => {
-      // callBack fonk
-      //mevcut değeri alır ve yeni değeri döndürür.
-      setTimeLeft((prevTime) => prevTime - 1000);  // Her saniye 1000ms azalt
-    }, 1000);
-
-    // eski intervali temizle 
-    // javascript tarafından built-in fonk.
-    return () => clearInterval(interval);
+    
   }, [timeLeft]);
 
   const formatTime = (milliseconds) => {
-    const seconds = Math.floor((milliseconds / 1000) % 60);
-    const minutes = Math.floor((milliseconds / 1000 / 60) % 60);
-    const hours = Math.floor((milliseconds / (1000 * 60 * 60)) % 24);
+    
     const days = Math.floor(milliseconds / (1000 * 60 * 60 * 24));
 
-    return `${days} gün ${hours} saat ${minutes} dakika ${seconds} saniye`;
+    return `${days} gün kaldı.`;
   };
 
   return (

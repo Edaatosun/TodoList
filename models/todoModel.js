@@ -23,12 +23,13 @@ export class TodoModel {
 
       // Güncellenmiş todo listesini AsyncStorage'a kaydediyoruz.
       await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(todoList));
+      return todoList;
     } catch (error) {
       console.error("Todo eklerken hata oluştu: ", error);
     }
   }
 
-  async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory) {
+  static async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory) {
     try {
       // Kullanıcıya özel todo listesini AsyncStorage'tan alıyoruz yine. 
       //Eğer bulamazsa boş dizi döndürür.

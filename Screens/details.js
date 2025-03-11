@@ -5,6 +5,7 @@ import EditTodo from "./editTodo";
 import { removeTodo, getTodoList } from '../models/todoModel';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import Icon2 from 'react-native-vector-icons/Feather';
+import Icon3 from 'react-native-vector-icons/FontAwesome'
 import { users } from '../models/users'; 
 
 export default function Details({ navigation }) {
@@ -50,7 +51,7 @@ export default function Details({ navigation }) {
 
   const confirmDelete = async () => {
     try {
-      console.log("Deleting todo with ID:", todo.id); 
+      console.log("Deleting todo ID:", todo.id); 
       // Delete the todo from the list
       await removeTodo(userId, todo.id); 
 
@@ -88,7 +89,16 @@ export default function Details({ navigation }) {
       <View style={{ height: "90%", marginLeft: 20 }}>
         <Text style={{ fontWeight: "bold", fontSize: 26 }}>{todo.title}</Text>
         <Text style={{ fontSize: 16 }}>{todo.description}</Text>
-        <Text style={styles.createdAtText}>Created at: {todo.createdAt}</Text>
+        
+        <View style={styles.categoryContainer}>
+            <Text style={{fontSize: 12, color: "black",}}>Deadline: {todo.deadLine}</Text>
+            {todo.category === "Kariyer"? (
+            <Icon3 name = "briefcase" size = {24} color = "black"/>
+            ):
+            (
+            <Icon3 name ="star" size = {30} color= "#ffdf00"/>              
+            )}
+        </View>
       </View>
 
       {modalVisible && (
@@ -128,13 +138,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
   },
 
-  createdAtText: {
-    position: "absolute",
-    bottom: 0,
-    left: 0,
-    fontSize: 12,
-    color: "#272727",
-    marginBottom: 60,
+  categoryContainer: {
+    position: "absolute",  // Mutlaka kartın içinde konumlanmasını sağlar.
+    bottom: 50,             // Her zaman kartın en altına yapıştırır.
+    left: 0,               // Opsiyonel: Kartın sol kenarına yaslar.
+    right: 10,              // Opsiyonel: Kartın sağ kenarına yaslar.
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",  // Daha düzgün hizalama için "center" kullanabilirsiniz.
+    padding: 10,   
+ 
   },
   modalBackground: {
     flex: 1,

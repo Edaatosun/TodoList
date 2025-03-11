@@ -44,18 +44,10 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
     const currentUser = await users.getCurrentUser();
     if (!currentUser) return;
 
-    const todoModel = new TodoModel(
-      currentUser.id, 
-      todo.id, 
-      head, 
-      description, 
-      todo.createdAt, 
-      deadline, 
-      category
-    );
+    
 
     try {
-      await todoModel.updateTodo(currentUser.id, todo.id, head, description, deadline, category);
+      await TodoModel.updateTodo(currentUser.id, todo.id, head, description, deadline, category);
       navigation.navigate("MainPage");
       setModalVisible(false);
     } catch (error) {

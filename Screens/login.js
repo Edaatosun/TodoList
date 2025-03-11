@@ -11,7 +11,6 @@ export default function Login({ navigation }) {
   const [password, setPassword] = useState("");
   const [secureText, setSecureText] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(false);
 
   // useEffect ile uygulama yeniden başladığında AsyncStorage'dan kullanıcı durumu kontrol edilir
   useEffect(() => {

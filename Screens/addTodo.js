@@ -9,10 +9,12 @@ import React from 'react';
 export default function AddTodo({ modalVisible, setModalVisible }) {
   const [head, setHead] = useState("");
   const [description, setDescription] = useState("");
-  const [deadline, setDeadline] = useState("");
+
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [category, setCategory] = useState("");
   const [userId, setUserId] = useState(null);
+  const [newDate, setNewDate] = useState(new Date());
+  const [deadline, setDeadline] = useState(newDate.toLocaleDateString());
   
   // bir kez userId yi alıyoruz
   useEffect(() => {
@@ -29,12 +31,7 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
   const showDatePicker = () => setDatePickerVisibility(true);
   const hideDatePicker = () => setDatePickerVisibility(false);
 
-  // seçtiği tarihi saklıyoruz 
-  const handleConfirm = (date) => {
-    setDeadline(date.toLocaleDateString());
-    console.log(deadline);
-    hideDatePicker();
-  };
+ 
 
   const handleAddTodo = async () => {
     if (!userId) {
@@ -91,7 +88,7 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
   };
 
   return (
-    <Pressable onPress={closeModal} style={styles.backdrop}>
+    <TouchableOpacity onPress={closeModal} style={styles.backdrop}>
       <Pressable style={{ width: '100%', height: '87%' }}>
         <View style={{backgroundColor: '#F79E89', height: Dimensions.get('window').height,borderTopRightRadius: 20, borderTopLeftRadius: 20,}}>
         <KeyboardAvoidingView
@@ -100,18 +97,20 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
         >
         <Animated.View style={[styles.bottomSheet, { transform: [{ translateY: slide }] }]}>
             <View style={{alignItems:"center", justifyContent:"center"}}>
-              <View style={{
+              <TouchableOpacity onPress={closeModal}
+              style={{
                   borderWidth: 3,
                   borderColor: "white",
                   width: "40%",
                   borderRadius: 50
-                }}></View>
+                  
+                }}></TouchableOpacity>
               </View>
             <ScrollView 
               contentContainerStyle={{ flexGrow: 1, paddingBottom: 100, paddingHorizontal: 15 }}
               keyboardShouldPersistTaps="always" // Tıklamalarla klavye kapanmasını sağlar
               keyboardDismissMode="on-drag"  // Scroll yaparken klavye kapanmasını sağlar
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator={false} // aşağı kayan çubuğun kaybolmasını sağlar.
             >
 
               <TextInput
@@ -129,15 +128,15 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
               />
 
               <View style={styles.calendarContainer}>
+              <TouchableOpacity onPress={showDatePicker} style={styles.TextInput}>
                 <TextInput
-                  placeholder="Deadline (Optional)"
-                  value={deadline}
-                  style={styles.TextInput}
-                  editable={false}
-                />
-                <TouchableOpacity onPress={showDatePicker} onRequestClose={() => setDatePickerVisibility(false)}style={styles.calendarIcon}>
-                  <Icon name="calendar" size={30} color="#000" />
-                </TouchableOpacity>
+                    placeholder="Deadline (Optional)"
+                    value={deadline}
+                    editable={false}
+                    style={{justifyContent:'center',alignItems:"center", color:"white", fontSize:16}}
+                  />
+              </TouchableOpacity>
+              <Icon name="calendar" size={26} color="#000" style={styles.calendarIcon} />
               </View>
                
               {isDatePickerVisible && (
@@ -147,24 +146,41 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
                     visible={isDatePickerVisible}
                   >
                     <View style={styles.overlay}>
-                      <View style={{justifyContent:"center", alignItems:"center"}}>
+                      <View style={{justifyContent:"center", alignItems:"center", flexDirection:'column'}}>
                         <DatePicker
-                          value={new Date()}
+                          value= {newDate}
                           mode="date"
                           display={Platform.OS === "ios" ? "spinner" : "calendar"}
                           style={styles.datePicker}
+                          
                           onChange={(event, selectedDate) => {
+
                             if (selectedDate) {
                               setDeadline(selectedDate.toLocaleDateString());
+                            } else{
+                              setDeadline(newDate);
                             }
-                            setDatePickerVisibility(false);
+                            if(Platform.OS==="android"){
+                              setDatePickerVisibility(false);
+                            }
+                           
                           }}
                         />
-                        {/* 
-                        <TouchableOpacity onPress={setDatePickerVisibility(false)}>
-                          <Text>Kapat</Text>
-                        </TouchableOpacity>
-                        */}
+                         {/* iOS için "Kapat" butonu */}
+                        {Platform.OS === "ios" && (
+                          <TouchableOpacity
+                            style={styles.closeButton}
+                            onPress={() => {
+
+                                setDatePickerVisibility(false)
+                              }
+                             
+                             
+                            }
+                          >
+                            <Text style={styles.closeButtonText}>Kapat</Text>
+                          </TouchableOpacity>
+                        )}
                       
                       </View>
                     </View>
@@ -202,7 +218,7 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
         </KeyboardAvoidingView>
         </View>
       </Pressable>
-    </Pressable>
+    </TouchableOpacity>
   
   );
 }
@@ -248,7 +264,7 @@ const styles = StyleSheet.create({
   calendarIcon: {
     position: "absolute",
     right: 20,
-    top: 18,
+    top: 20,
   },
   overlay: {
     position: 'absolute',
@@ -306,11 +322,25 @@ const styles = StyleSheet.create({
   },
 
   datePicker: {
-    backgroundColor: 'rgba(0,0,0,0.5)', 
+    backgroundColor: 'rgba(176,224,230,0.5)', 
     borderRadius: 10,
     height: 250,
     justifyContent: 'center', // İçeriği ortalamak için
     alignItems: 'center', // İçeriği yatayda ortalamak için
+  },
+
+  closeButton: {
+    marginTop:10,
+    backgroundColor: "#FF6347",  // Tomat renk
+    padding: 10,
+    borderRadius: 5,
+    width: '200',  // Butonun tam genişlikte olması
+    borderRadius: 10
+  },
+  closeButtonText: {
+    color: "white",
+    fontSize: 16,
+    textAlign: "center",
   },
 
 });

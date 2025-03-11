@@ -15,6 +15,8 @@ export class users {
       const storedUsers = await AsyncStorage.getItem("users");
       const usersList = storedUsers ? JSON.parse(storedUsers) : [];
 
+      console.log(usersList);
+
       // Aynı email ile kayıtlı kullanıcı var mı kontrol edelim
       const existingUser = usersList.find((user) => user.email === email);
       if (existingUser) {
