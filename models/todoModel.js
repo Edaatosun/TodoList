@@ -1,7 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export class TodoModel {
-  constructor(userId, id, title, description, createdAt, deadLine, category) {
+  constructor(userId, id, title, description, createdAt, deadLine, category,imageUrl) {
     this.userId = userId; // Her kullanıcıya ait farklı todo listesi olacak o yüzden userId kullanıyoruz.
     this.id = id;
     this.title = title;
@@ -9,6 +9,7 @@ export class TodoModel {
     this.createdAt = createdAt;
     this.deadLine = deadLine;
     this.category = category; 
+    this.imageUrl = imageUrl;
   }
 
   // Kullanıcıya özel Todo ekliyoruz.
@@ -29,7 +30,7 @@ export class TodoModel {
     }
   }
 
-  static async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory) {
+  static async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory,image) {
     try {
       // Kullanıcıya özel todo listesini AsyncStorage'tan alıyoruz yine. 
       //Eğer bulamazsa boş dizi döndürür.
@@ -42,7 +43,27 @@ export class TodoModel {
         todo.description = newDescription;
         todo.deadLine = newDeadLine;
         todo.category = newCategory;
+        todo.imageUrl = image
 
+        // Güncellenmiş todo listesini AsyncStorage'a kaydet
+        await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(todoList));
+      }
+    } catch (error) {
+      console.error("Todo güncellenirken hata oluştu: ", error);
+    }
+  }
+
+
+  static async updateTodo2(userId, id, newImageUrl) {
+    try {
+      // Kullanıcıya özel todo listesini AsyncStorage'tan alıyoruz yine. 
+      //Eğer bulamazsa boş dizi döndürür.
+      let todoList = JSON.parse(await AsyncStorage.getItem(`todoList_${userId}`)) || [];
+
+      // Güncellenmesi gereken todo'yu buluyoruz todonun kendi id si ile
+      const todo = todoList.find(todo => todo.id === id);
+      if (todo) {
+        todo.imageUrl = newImageUrl;
         // Güncellenmiş todo listesini AsyncStorage'a kaydet
         await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(todoList));
       }

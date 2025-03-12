@@ -65,7 +65,6 @@ useEffect(() => {
     // Seçilen kategori ile eşleşen görevleri getir
     const filtered = tasks.filter(task => task.category === selectedCategory); 
     setFilteredTasks(filtered);
-    console.log(tasks);
 
     if (filtered.length === 0) {
       setNoTasksMessage("Bu kategoride hiçbir todo bulunmamaktadır.");

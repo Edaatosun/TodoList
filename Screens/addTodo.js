@@ -1,20 +1,25 @@
-import { View, Text, TextInput, KeyboardAvoidingView, TouchableOpacity, StyleSheet, Animated, ScrollView, Pressable, Platform, Keyboard, Alert, TouchableWithoutFeedback, Dimensions, Modal } from 'react-native';
+import { View, Text, TextInput, KeyboardAvoidingView, 
+  TouchableOpacity, StyleSheet, Animated, ScrollView,
+  Pressable, Platform,  Dimensions, Modal,Alert} from 'react-native';
 import { useState, useEffect } from 'react';
 import { users } from '../models/users'; 
 import DatePicker from '@react-native-community/datetimepicker';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { TodoModel } from '../models/todoModel';
 import React from 'react';
+import * as ImagePicker from 'expo-image-picker';
+import {Linking} from 'react-native';
 
 export default function AddTodo({ modalVisible, setModalVisible }) {
   const [head, setHead] = useState("");
   const [description, setDescription] = useState("");
-
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
   const [category, setCategory] = useState("");
   const [userId, setUserId] = useState(null);
   const [newDate, setNewDate] = useState(new Date());
   const [deadline, setDeadline] = useState(newDate.toLocaleDateString());
+  const [image, setImage] = useState(null);
+
   
   // bir kez userId yi alıyoruz
   useEffect(() => {
@@ -29,10 +34,8 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
 
   // datePicker görünür olup olmayacağı ile ilgili fonk.
   const showDatePicker = () => setDatePickerVisibility(true);
-  const hideDatePicker = () => setDatePickerVisibility(false);
 
- 
-
+  // add için fonk
   const handleAddTodo = async () => {
     if (!userId) {
       console.error("User not authenticated");
@@ -46,9 +49,9 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
     }
 
     const createdAt = new Date().toLocaleDateString('tr-TR');
-    // todoId y uniq olarak atıyoruz
+    // todoId uniq olarak atıyoruz
     const todoId = Date.now().toString() + Math.random().toString(36).substring(2, 9);
-    const newTodo = new TodoModel(userId, todoId, head, description, createdAt, deadline, category);
+    const newTodo = new TodoModel(userId, todoId, head, description, createdAt, deadline, category,image);
 
     try {
       await newTodo.addTodo(userId, newTodo); 
@@ -58,7 +61,8 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
     }
   };
 
-  const slide = React.useRef(new Animated.Value(500)).current;
+  // Animasyon
+  const slide = React.useRef(new Animated.Value(500)).current; // değişmeyen değer saklamak için useRef kullandık.
   
   const slideUp = () => {
     Animated.timing(slide, {
@@ -86,11 +90,55 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
       setModalVisible(false);
     }, 600);
   };
+////////////////////////////
+
+// izin durumları
+
+  const pickImage = async () => {
+    // İzin durumu kontrolü
+    const resultAccess = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (resultAccess.status === "granted") {
+      openGallery();
+    } else {
+      Alert.alert(
+        "İzin Gerekli",
+        "Galeriye erişim izni vermelisiniz.",
+        [
+          {
+            text: "Tamam",
+            onPress:  () => {
+              Linking.openSettings();
+            }
+          },
+          { text: "İptal", style: "cancel" }
+        ]
+      );
+    }
+  };
+  // Galeriyi açan fonksiyon
+  const openGallery = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ['images', 'videos'],
+      allowsEditing: false, // düzenlemeye izin verme
+      aspect: [4, 3], // kırpma işlemi sırasında [width, height] bunu verir.
+      quality: 1, // kalite en düşük 0 en yüksek 1 şeklindedir.
+    });
+
+    console.log(result);
+
+    if (!result.canceled) {
+      setImage(result.assets[0].uri);
+    }
+  };
 
   return (
     <TouchableOpacity onPress={closeModal} style={styles.backdrop}>
       <Pressable style={{ width: '100%', height: '87%' }}>
-        <View style={{backgroundColor: '#F79E89', height: Dimensions.get('window').height,borderTopRightRadius: 20, borderTopLeftRadius: 20,}}>
+        <View style={{
+          backgroundColor: '#F79E89',
+           height: Dimensions.get('window').height,
+           borderTopRightRadius: 20, 
+           borderTopLeftRadius: 20,}}>
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={{ flex: 1 }}
@@ -123,7 +171,7 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
                 placeholder="Description"
                 value={description}
                 onChangeText={text => setDescription(text)}
-                style={[styles.TextInput, { height: 400, textAlignVertical: "top" }]}
+                style={[styles.TextInput, { height: 350, textAlignVertical: "top" }]}
                 multiline
               />
 
@@ -136,7 +184,25 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
                     style={{justifyContent:'center',alignItems:"center", color:"white", fontSize:16}}
                   />
               </TouchableOpacity>
-              <Icon name="calendar" size={26} color="#000" style={styles.calendarIcon} />
+              <TouchableOpacity style={styles.calendarIcon} onPress={showDatePicker}>
+                  <Icon name="calendar" size={26} color="#000"  />
+              </TouchableOpacity>
+              
+              </View>
+
+              <View style={styles.calendarContainer}>
+              <TouchableOpacity onPress={pickImage} style={styles.TextInput}>
+                <TextInput
+                    placeholder="Add Image (Optional)"
+                    editable={false}
+                    style={{justifyContent:'center',alignItems:"center", color:"white", fontSize:16}}
+                  />
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.calendarIcon} onPress={pickImage}>
+                  <Icon name="image" size={26} color="#000"  />
+                  
+              </TouchableOpacity>
+              
               </View>
                
               {isDatePickerVisible && (
@@ -171,11 +237,8 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
                           <TouchableOpacity
                             style={styles.closeButton}
                             onPress={() => {
-
                                 setDatePickerVisibility(false)
                               }
-                             
-                             
                             }
                           >
                             <Text style={styles.closeButtonText}>Kapat</Text>
@@ -254,6 +317,7 @@ const styles = StyleSheet.create({
     marginTop: 15,
     color: "white",
     paddingHorizontal: 10,
+    justifyContent:"center",
   },
   calendarContainer: {
     flexDirection: 'row',

@@ -19,8 +19,6 @@ export default function Details({ navigation }) {
     const fetchUserId = async () => {
       const currentUser = await users.getCurrentUser();
       setUserId(currentUser.id); 
-
-      console.log(userId);
     };
 
     fetchUserId();
@@ -51,8 +49,7 @@ export default function Details({ navigation }) {
 
   const confirmDelete = async () => {
     try {
-      console.log("Deleting todo ID:", todo.id); 
-      // Delete the todo from the list
+
       await removeTodo(userId, todo.id); 
 
       // Update the todo list in state
@@ -89,6 +86,7 @@ export default function Details({ navigation }) {
       <View style={{ height: "90%", marginLeft: 20 }}>
         <Text style={{ fontWeight: "bold", fontSize: 26 }}>{todo.title}</Text>
         <Text style={{ fontSize: 16 }}>{todo.description}</Text>
+        {todo.imageUrl && <Image source={{ uri: todo.imageUrl }} style={{width:300, height:300, marginTop:20}} />}
         
         <View style={styles.categoryContainer}>
             <Text style={{fontSize: 12, color: "black",}}>Deadline: {todo.deadLine}</Text>
