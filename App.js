@@ -13,8 +13,8 @@ const Stack = createStackNavigator();
 export default function App() {
   return (
     <NavigationContainer>
-      <Stack.Navigator screenOptions={{headerShown:false, gestureEnabled: false,}} >
-      <Stack.Screen name = "Login" component={login}></Stack.Screen>
+      <Stack.Navigator initialRouteName="Login" screenOptions={{headerShown:false, gestureEnabled: false,}} >
+        <Stack.Screen name = "Login" component={login}></Stack.Screen>
         <Stack.Screen name = "SignUp" component={signUp}></Stack.Screen>
         <Stack.Screen name = "ChangePassword" component={changePassword}></Stack.Screen>
         <Stack.Screen name = "MainPage" component={mainPage}></Stack.Screen>

@@ -1,22 +1,26 @@
 import { View, Text, TextInput, TouchableOpacity, 
-  StyleSheet, KeyboardAvoidingView, ScrollView, Platform, Animated, Pressable,Modal ,Dimensions} from 'react-native';
+  StyleSheet, KeyboardAvoidingView, ScrollView, Platform, Animated, Pressable,Modal ,Dimensions,
+  Image} from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 import DatePicker from '@react-native-community/datetimepicker';
-import { TodoModel } from '../models/todoModel';
+import { getTodoList, removeImage, TodoModel } from '../models/todoModel';
 import { useNavigation } from '@react-navigation/native';
 import { users } from '../models/users';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon2 from 'react-native-vector-icons/MaterialIcons';
 import * as ImagePicker from 'expo-image-picker';
 
 export default function EditTodo({ modalVisible, setModalVisible, todo }) {
   const navigation = useNavigation();
-  const [head, setHead] = useState(todo?.title || "");
-  const [description, setDescription] = useState(todo?.description || "");
-  const [deadline, setDeadline] = useState(todo?.deadLine || "");
+  const [Todo,setTodo] = useState(todo);
+  const [head, setHead] = useState(Todo?.title || "");
+  const [description, setDescription] = useState(Todo?.description || "");
+  const [deadline, setDeadline] = useState(Todo?.deadLine || "");
   const [isDatePickerVisible, setDatePickerVisibility] = useState(false);
-  const [category, setCategory] = useState(todo?.category || "");
+  const [category, setCategory] = useState(Todo?.category || "");
   const [image, setImage] = useState(null);
   const slide = useRef(new Animated.Value(300)).current;
+  const [todoListState, setTodoListState] = useState([]);
 
   const showDatePicker = () => setDatePickerVisibility(true);
   const [newDate, setNewDate] = useState(new Date());
@@ -42,7 +46,11 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
       toValue: 300,
       duration: 500,
       useNativeDriver: true,
-    }).start(() => setModalVisible(false));
+    }).start(() =>{
+      
+      navigation.navigate("Details", { id: Todo.id });
+      setModalVisible(false);
+    } );
   };
 
   ////////////////////////////////
@@ -56,7 +64,7 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
 
 
     try {
-      await TodoModel.updateTodo(currentUser.id, todo.id, head, description, deadline, category,image);
+      await TodoModel.updateTodo(currentUser.id, Todo.id, head, description, deadline, category,image);
       navigation.navigate("MainPage");
       setModalVisible(false);
     } catch (error) {
@@ -95,8 +103,8 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
     // Galeriyi açan fonksiyon
     const openGallery = async () => {
       let result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ['images', 'videos'],
-        allowsEditing: false, // düzenlemeye izin verme
+        mediaTypes: ['images'], // "video" eklenebilir
+        allowsEditing: true, // düzenlemeye izin verme
         aspect: [4, 3], // kırpma işlemi sırasında [width, height] bunu verir.
         quality: 1, // kalite en düşük 0 en yüksek 1 şeklindedir.
       });
@@ -108,6 +116,34 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
       }
     };
 
+
+    ///////////////////
+
+    //image silme fonk.
+    const deleteImage = async () => {
+      const currentUser = await users.getCurrentUser();  // Asenkron işlemi bekle
+      if (!currentUser) return;
+    
+      try {
+        await removeImage(currentUser.id, Todo.id); // Önce resmi kaldır
+    
+        const updatedTodoList = await getTodoList(currentUser.id); // Güncellenmiş veriyi çek
+        setTodoListState(updatedTodoList); // Yeni todo listesini state'e ata
+        console.log("Güncellenmiş Todo Listesi:", updatedTodoList);
+    
+        const newTodo = updatedTodoList.find(item => item.id === Todo.id); // Yeni todoyu bul
+        console.log("Güncellenmiş Todo:", newTodo);
+    
+        setTodo(newTodo || {}); // Güncellenmiş todo'yu state'e ata, yoksa boş nesne ata
+        setImage(null); // Resmi kaldır
+    
+        console.log("Resim silindi ve todo güncellendi!");
+      } catch (error) {
+        console.error("Resim silme hatası:", error);
+      }
+    };
+    
+    
   return (
       <TouchableOpacity onPress={slideDown} style={styles.backdrop}>
         <Pressable style={{ width: '100%', height: '90%' }}>
@@ -152,7 +188,7 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
                   placeholder="Description"
                   value={description}
                   onChangeText={setDescription}
-                  style={[styles.input, { height: 350, textAlignVertical: "top" }]}
+                  style={[styles.input, { height: image || Todo.imageUrl ? 280 : 350, textAlignVertical: "top" }]}
                   multiline
                 />
                 <View style={styles.calendarContainer}>
@@ -171,19 +207,47 @@ export default function EditTodo({ modalVisible, setModalVisible, todo }) {
                 </View>
 
                 <View style={styles.calendarContainer}>
-                    <TouchableOpacity onPress={pickImage} style={styles.input}>
-                      <TextInput
-                          placeholder="Add Image (Optional)"
-                          editable={false}
-                          style={{justifyContent:'center',alignItems:"center", color:"white", fontSize:16}}
-                        />
-                    </TouchableOpacity>
-                    <TouchableOpacity style={styles.calendarIcon} onPress={pickImage}>
-                        <Icon name="image" size={26} color="#000"  />
-                        
-                    </TouchableOpacity>
-               
-                 </View>               
+                      {image|| Todo.imageUrl? (
+                      <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: '300' }}>
+                      <Image
+                      resizeMode='cover'
+                        source={{ uri: image? image : Todo.imageUrl }}
+                        style={{ width: 200, height: 150, marginTop: 10 }}
+                      />
+                      <View>
+                        <TouchableOpacity style={{ marginLeft: 40 }} onPress={pickImage}>
+                          <Icon name="image" size={26} color="#000" />
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={{ marginLeft: 40 }} onPress={deleteImage}>
+                        <Icon2 name="delete" size={32} color="#000" style={{ marginTop: 20 }} />
+                        </TouchableOpacity>
+                      </View>
+                      
+                    </View>
+                      
+                      ) : (
+                        <>
+                          {/* Resim eklemek için kullanıcıya alan sunan TextInput */}
+                          <TouchableOpacity onPress={pickImage} style={styles.input}>
+                            <TextInput
+                              placeholder="Add Image (Optional)"
+                              editable={false}
+                              style={{
+                                justifyContent: 'center',
+                                alignItems: 'center',
+                                color: 'white',
+                                fontSize: 16,
+                              }}
+                            />
+                          </TouchableOpacity>
+                          {/* Resim seçme ikonu */}
+                          <TouchableOpacity style={styles.calendarIcon} onPress={pickImage}>
+                            <Icon name="image" size={26} color="#000" />
+                          </TouchableOpacity>
+                        </>
+                      )}
+                </View>           
 
                 {isDatePickerVisible && (
                   <Modal

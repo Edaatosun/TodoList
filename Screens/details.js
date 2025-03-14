@@ -1,4 +1,4 @@
-import { Image, StyleSheet, TouchableOpacity, View, Text, Alert, Modal } from "react-native";
+import { Image, StyleSheet, TouchableOpacity, View, Text, Alert, Modal, ScrollView } from "react-native";
 import { useRoute } from "@react-navigation/native";
 import { useEffect, useState } from "react";
 import EditTodo from "./editTodo";
@@ -33,7 +33,7 @@ export default function Details({ navigation }) {
 
       fetchTodoList();
     }
-  }, [userId]);  
+  }, [userId,modalVisible]);  
 
   const route = useRoute();
   const { id } = route.params;
@@ -67,60 +67,72 @@ export default function Details({ navigation }) {
   };
 
   return (
-    <View>
-      <View style={styles.headContainer}>
-        <TouchableOpacity onPress={backPageNavigation}>
-        <Icon name="arrow-back-ios" size={24}  style={{marginLeft:10, padding:5}} color="#000"  />
-        </TouchableOpacity>
-
-        <View style={styles.iconContainer}>
-          <TouchableOpacity onPress={() => setModalVisible(true)}>
-          <Icon2 name="edit-3" size={26} style={{padding:5}} color="#000"  />
+      <View style={{ flex: 1 }}>
+        <View style={styles.headContainer}>
+          <TouchableOpacity onPress={backPageNavigation}>
+            <Icon name="arrow-back-ios" size={24} style={{ marginLeft: 10, padding: 5 }} color="#000" />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => setDeleteModalVisible(true)}>
-            <Icon2 name="trash-2" size={26} style={{marginHorizontal:15 ,padding:5}}  color="#000"  />
-          </TouchableOpacity>
+    
+          <View style={styles.iconContainer}>
+            <TouchableOpacity onPress={() => setModalVisible(true)}>
+              <Icon2 name="edit-3" size={26} style={{ padding: 5 }} color="#000" />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setDeleteModalVisible(true)}>
+              <Icon2 name="trash-2" size={26} style={{ marginHorizontal: 15, padding: 5 }} color="#000" />
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
-
-      <View style={{ height: "90%", marginLeft: 20 }}>
-        <Text style={{ fontWeight: "bold", fontSize: 26 }}>{todo.title}</Text>
-        <Text style={{ fontSize: 16 }}>{todo.description}</Text>
-        {todo.imageUrl && <Image source={{ uri: todo.imageUrl }} style={{width:300, height:300, marginTop:20}} />}
-        
-        <View style={styles.categoryContainer}>
-            <Text style={{fontSize: 12, color: "black",}}>Deadline: {todo.deadLine}</Text>
-            {todo.category === "Kariyer"? (
-            <Icon3 name = "briefcase" size = {24} color = "black"/>
-            ):
-            (
-            <Icon3 name ="star" size = {30} color= "#ffdf00"/>              
+    
+        <ScrollView contentContainerStyle={{ paddingBottom: 50 }}>
+          <View style={{ marginLeft: 20 }}>
+            <Text style={{ fontWeight: "bold", fontSize: 26 }}>{todo.title}</Text>
+            <Text style={{ fontSize: 16, marginVertical: 10 }}>{todo.description}</Text>
+            
+           
+            {todo.imageUrl && (
+              <Image
+                source={{ uri: todo.imageUrl }}
+                style={{ width: 200, height: 150, marginTop: 20, alignSelf: "center" }}
+                resizeMode="stretch"
+              />
             )}
+          </View>
+        </ScrollView>
+    
+        {/* Deadline kısmını absolute olarak en alta yerleştiriyoruz */}
+        <View style={styles.categoryContainer}>
+          <Text style={{ fontSize: 12, color: "black" }}>Deadline: {todo.deadLine}</Text>
+          {todo.category === "Kariyer" ? (
+            <Icon3 name="briefcase" size={24} color="black" />
+          ) : (
+            <Icon3 name="star" size={30} color="#ffdf00" />
+          )}
         </View>
+    
+        {modalVisible && (
+          <EditTodo modalVisible={modalVisible} setModalVisible={setModalVisible} todo={todo} />
+        )}
+    
+        <Modal
+          animationType="fade"
+          transparent={true}
+          visible={deleteModalVisible}
+          onRequestClose={() => setDeleteModalVisible(false)}
+        >
+          <View style={styles.modalBackground}>
+            <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
+              <Text style={{ color: "#F76C6A", fontWeight: "bold", fontSize: 14 }}>Delete TODO</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteModalVisible(false)}>
+              <Text style={{ color: "#00FF19", opacity: 0.5, fontSize: 14 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </Modal>
       </View>
-
-      {modalVisible && (
-        <EditTodo modalVisible={modalVisible} setModalVisible={setModalVisible} todo={todo} />
-      )}
-
-      <Modal
-        animationType="fade"
-        transparent={true}
-        visible={deleteModalVisible}
-        onRequestClose={() => setDeleteModalVisible(false)}
-      >
-        <View style={styles.modalBackground}>
-          <TouchableOpacity style={styles.deleteButton} onPress={confirmDelete}>
-            <Text style={{ color: "#F76C6A", fontWeight: "bold", fontSize: 14 }}>Delete TODO</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={styles.cancelButton} onPress={() => setDeleteModalVisible(false)}>
-            <Text style={{ color: "#00FF19", opacity: 0.5, fontSize: 14 }}>Cancel</Text>
-          </TouchableOpacity>
-        </View>
-      </Modal>
-    </View>
-  );
+    );
+    
 }
+  
 
 const styles = StyleSheet.create({
   headContainer: {
@@ -136,16 +148,16 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
   },
 
+  // Bu kısmı kesinlikle kaydırılabilir alanda tutuyoruz
   categoryContainer: {
     position: "absolute",  // Mutlaka kartın içinde konumlanmasını sağlar.
-    bottom: 50,             // Her zaman kartın en altına yapıştırır.
-    left: 0,               // Opsiyonel: Kartın sol kenarına yaslar.
-    right: 10,              // Opsiyonel: Kartın sağ kenarına yaslar.
+    bottom: 0,             // Sayfanın en altına yapıştırır.
+    left: 0,               // Sol kenarına yaslar.
+    right: 0,              // Sağ kenarına yaslar.
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",  // Daha düzgün hizalama için "center" kullanabilirsiniz.
-    padding: 10,   
- 
+    padding: 10,
   },
   modalBackground: {
     flex: 1,

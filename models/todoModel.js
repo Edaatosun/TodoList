@@ -30,7 +30,7 @@ export class TodoModel {
     }
   }
 
-  static async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory,image) {
+  static async updateTodo(userId, id, newTitle, newDescription, newDeadLine, newCategory,imageUrl) {
     try {
       // Kullanıcıya özel todo listesini AsyncStorage'tan alıyoruz yine. 
       //Eğer bulamazsa boş dizi döndürür.
@@ -43,7 +43,7 @@ export class TodoModel {
         todo.description = newDescription;
         todo.deadLine = newDeadLine;
         todo.category = newCategory;
-        todo.imageUrl = image
+        todo.imageUrl = imageUrl
 
         // Güncellenmiş todo listesini AsyncStorage'a kaydet
         await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(todoList));
@@ -54,23 +54,7 @@ export class TodoModel {
   }
 
 
-  static async updateTodo2(userId, id, newImageUrl) {
-    try {
-      // Kullanıcıya özel todo listesini AsyncStorage'tan alıyoruz yine. 
-      //Eğer bulamazsa boş dizi döndürür.
-      let todoList = JSON.parse(await AsyncStorage.getItem(`todoList_${userId}`)) || [];
-
-      // Güncellenmesi gereken todo'yu buluyoruz todonun kendi id si ile
-      const todo = todoList.find(todo => todo.id === id);
-      if (todo) {
-        todo.imageUrl = newImageUrl;
-        // Güncellenmiş todo listesini AsyncStorage'a kaydet
-        await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(todoList));
-      }
-    } catch (error) {
-      console.error("Todo güncellenirken hata oluştu: ", error);
-    }
-  }
+  
 }
 
 // Kullanıcıya özel Todo listesini  almak için userId ile filtreliyoruz.
@@ -97,3 +81,26 @@ export const removeTodo = async (userId, todoId) => {
     console.error(error);
   }
 };
+
+export const removeImage = async (userId, todoId) => {
+  try {
+    let todoList = JSON.parse(await AsyncStorage.getItem(`todoList_${userId}`)) || [];
+    console.log("kırmızıııııııııııııııııı")
+    
+    let updatedList = todoList.map(todo => {
+      if (todo.id === todoId) {
+        console.log("yeşillllllllllllllllllllllllllll")
+        return { ...todo, imageUrl: "" };  // Resmi kaldırıyoruz(
+        console.log(todo.imageUrl);
+      }
+      return todo;
+    });
+
+    await AsyncStorage.setItem(`todoList_${userId}`, JSON.stringify(updatedList));
+    console.log("Resim başarıyla silindi!");
+  } catch (error) {
+    console.error("Resim silinirken hata oluştu:", error);
+  }
+};
+
+

@@ -1,6 +1,7 @@
 import { View, Text, TextInput, KeyboardAvoidingView, 
   TouchableOpacity, StyleSheet, Animated, ScrollView,
-  Pressable, Platform,  Dimensions, Modal,Alert} from 'react-native';
+  Pressable, Platform,  Dimensions, Modal,Alert,
+  Image} from 'react-native';
 import { useState, useEffect } from 'react';
 import { users } from '../models/users'; 
 import DatePicker from '@react-native-community/datetimepicker';
@@ -171,7 +172,7 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
                 placeholder="Description"
                 value={description}
                 onChangeText={text => setDescription(text)}
-                style={[styles.TextInput, { height: 350, textAlignVertical: "top" }]}
+                style={[styles.TextInput, { height: image? 280 : 350, textAlignVertical: "top" }]}
                 multiline
               />
 
@@ -191,19 +192,41 @@ export default function AddTodo({ modalVisible, setModalVisible }) {
               </View>
 
               <View style={styles.calendarContainer}>
-              <TouchableOpacity onPress={pickImage} style={styles.TextInput}>
-                <TextInput
-                    placeholder="Add Image (Optional)"
-                    editable={false}
-                    style={{justifyContent:'center',alignItems:"center", color:"white", fontSize:16}}
-                  />
-              </TouchableOpacity>
-              <TouchableOpacity style={styles.calendarIcon} onPress={pickImage}>
-                  <Icon name="image" size={26} color="#000"  />
-                  
-              </TouchableOpacity>
-              
-              </View>
+                  {image ? (
+                   <View style={{ flexDirection: "row", justifyContent: "space-between", alignItems: "center", width: '300' }}>
+                   <Image
+                   resizeMode='cover'
+                     source={{ uri: image }}
+                     style={{ width: 200, height: 150, marginTop: 10 }}
+                   />
+                   <TouchableOpacity style={{ marginLeft: 40 }} onPress={pickImage}>
+                     <Icon name="image" size={26} color="#000" />
+                   </TouchableOpacity>
+                 </View>
+                   
+                  ) : (
+                    <>
+                      {/* Resim eklemek için kullanıcıya alan sunan TextInput */}
+                      <TouchableOpacity onPress={pickImage} style={styles.TextInput}>
+                        <TextInput
+                          placeholder="Add Image (Optional)"
+                          editable={false}
+                          style={{
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            color: 'white',
+                            fontSize: 16,
+                          }}
+                        />
+                      </TouchableOpacity>
+                      {/* Resim seçme ikonu */}
+                      <TouchableOpacity style={styles.calendarIcon} onPress={pickImage}>
+                        <Icon name="image" size={26} color="#000" />
+                      </TouchableOpacity>
+                    </>
+                  )}
+                </View>
+
                
               {isDatePickerVisible && (
                   <Modal
@@ -331,11 +354,12 @@ const styles = StyleSheet.create({
     top: 20,
   },
   overlay: {
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    bottom: 0,
+    //position: 'absolute',
+    //top: 0,
+    //left: 0,
+    //right: 0,
+    //bottom: 0,
+    flex:1,
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -398,7 +422,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FF6347",  // Tomat renk
     padding: 10,
     borderRadius: 5,
-    width: '200',  // Butonun tam genişlikte olması
+    //width: '200',  // Butonun tam genişlikte olması
     borderRadius: 10
   },
   closeButtonText: {
